@@ -118,5 +118,5 @@ def get_stores():
 
 if __name__ == '__main__':
     print("🚀 Starting AI Grocery Agent Web Interface...")
-    print("🌐 Open your browser to: http://localhost:5001")
-    app.run(debug=True, host='0.0.0.0', port=5001) 
+    print("🌐 Open your browser to: http://localhost:5002")
+    app.run(debug=True, host='0.0.0.0', port=5002) 
