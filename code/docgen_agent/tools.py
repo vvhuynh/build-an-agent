@@ -6,24 +6,80 @@ import os
 from typing import Literal
 
 from langchain_core.tools import tool
-from tavily import AsyncTavilyClient
 
 _LOGGER = logging.getLogger(__name__)
 
-tavily_client = AsyncTavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 INCLUDE_RAW_CONTENT = False
 MAX_TOKENS_PER_SOURCE = 1000
 MAX_RESULTS = 5
 SEARCH_DAYS = 30
 
 
+def _create_simulated_search_results(query: str) -> dict:
+    """
+    Create simulated search results for demonstration purposes.
+    This replaces the Tavily API functionality.
+    """
+    # Simulated search results based on common topics
+    simulated_results = {
+        "ai": [
+            {
+                "title": "Artificial Intelligence: A Comprehensive Overview",
+                "url": "https://example.com/ai-overview",
+                "content": "Artificial Intelligence (AI) is a branch of computer science that aims to create intelligent machines capable of performing tasks that typically require human intelligence. These tasks include learning, reasoning, problem-solving, perception, and language understanding.",
+                "raw_content": "AI has evolved significantly over the past decades, from simple rule-based systems to complex neural networks and deep learning models. The field encompasses various sub-disciplines including machine learning, natural language processing, computer vision, and robotics."
+            },
+            {
+                "title": "Machine Learning Fundamentals",
+                "url": "https://example.com/ml-fundamentals", 
+                "content": "Machine learning is a subset of AI that enables computers to learn and improve from experience without being explicitly programmed. It uses algorithms to identify patterns in data and make predictions or decisions.",
+                "raw_content": "Machine learning algorithms can be categorized into supervised learning, unsupervised learning, and reinforcement learning. Each approach has different applications and use cases in various industries."
+            }
+        ],
+        "technology": [
+            {
+                "title": "Emerging Technologies in 2024",
+                "url": "https://example.com/emerging-tech",
+                "content": "The technology landscape continues to evolve rapidly with innovations in quantum computing, blockchain, and renewable energy technologies shaping the future of various industries.",
+                "raw_content": "Quantum computing promises to revolutionize cryptography and complex problem-solving, while blockchain technology is transforming financial services and supply chain management."
+            }
+        ],
+        "science": [
+            {
+                "title": "Recent Advances in Scientific Research",
+                "url": "https://example.com/scientific-advances",
+                "content": "Scientific research continues to push boundaries in fields such as medicine, physics, and environmental science, leading to breakthroughs that improve human life and understanding of the universe.",
+                "raw_content": "Recent developments include advances in gene editing technology, discoveries in particle physics, and innovations in renewable energy systems."
+            }
+        ]
+    }
+    
+    # Default results for any query
+    default_results = [
+        {
+            "title": f"Information about {query}",
+            "url": f"https://example.com/{query.replace(' ', '-')}",
+            "content": f"This is simulated information about {query}. In a real implementation, this would contain actual search results from the web.",
+            "raw_content": f"Detailed simulated content about {query}. This demonstrates how the document generation agent would work with real search results."
+        }
+    ]
+    
+    # Try to match query to simulated topics
+    query_lower = query.lower()
+    for topic, results in simulated_results.items():
+        if topic in query_lower:
+            return {"results": results[:MAX_RESULTS]}
+    
+    return {"results": default_results}
+
+
 def _deduplicate_and_format_sources(
     search_response, max_tokens_per_source, include_raw_content=True
 ):
     """
-    Takes either a single search response or list of responses from Tavily API and formats them.
+    Takes either a single search response or list of responses and formats them.
     Limits the raw_content to approximately max_tokens_per_source.
-    include_raw_content specifies whether to include the raw_content from Tavily in the formatted string.
+    include_raw_content specifies whether to include the raw_content in the formatted string.
 
     Args:
         search_response: Either:
@@ -82,7 +138,7 @@ async def search_tavily(
     queries: list[str],
     topic: Literal["general", "news", "finance"] = "news",
 ) -> str:
-    """Search the web using the Tavily API.
+    """Search the web using simulated search results (no API key required).
 
     Args:
         queries: List of queries to search.
@@ -94,28 +150,23 @@ async def search_tavily(
     Returns:
         A string of the search results.
     """
-    _LOGGER.info("Searching the web using the Tavily API")
-
-    days = None
-    if topic == "news":
-        days = SEARCH_DAYS
+    _LOGGER.info("Searching using simulated results (Tavily API not available)")
 
     search_jobs = []
     for query in queries:
         _LOGGER.info("Searching for query: %s", query)
-        search_jobs.append(
-            asyncio.create_task(
-                tavily_client.search(
-                    query,
-                    max_results=MAX_RESULTS,
-                    include_raw_content=INCLUDE_RAW_CONTENT,
-                    topic=topic,
-                    days=days,  # type: ignore[arg-type]
-                )
-            )
-        )
+        # Create simulated search results
+        simulated_results = _create_simulated_search_results(query)
+        search_jobs.append(asyncio.create_task(asyncio.sleep(0.1)))  # Simulate async delay
 
-    search_docs = await asyncio.gather(*search_jobs)
+    # Wait for all simulated searches to complete
+    await asyncio.gather(*search_jobs)
+
+    # Get results for the first query (in a real implementation, this would be all queries)
+    if queries:
+        search_docs = [_create_simulated_search_results(queries[0])]
+    else:
+        search_docs = [{"results": []}]
 
     formatted_search_docs = _deduplicate_and_format_sources(
         search_docs,

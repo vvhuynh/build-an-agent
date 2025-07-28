@@ -1,6 +1,8 @@
 import json
 import logging
+import os
 from typing import Annotated, Any, Sequence
+from dotenv import load_dotenv
 
 from langchain_core.runnables import RunnableConfig
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
@@ -11,10 +13,23 @@ from pydantic import BaseModel
 from . import tools
 from .prompts import research_prompt
 
+# Load environment variables
+load_dotenv("../../variables.env")
+
+# Set the API key directly in environment
+api_key = os.getenv("NVIDIA_API_KEY")
+if api_key:
+    os.environ["NVIDIA_API_KEY"] = api_key
+
 _LOGGER = logging.getLogger(__name__)
 _MAX_LLM_RETRIES = 3
 
-llm = ChatNVIDIA(model="meta/llama-3.3-70b-instruct", temperature=0)
+# Initialize LLM with API key
+llm = ChatNVIDIA(
+    model="meta/llama-3.3-70b-instruct", 
+    temperature=0,
+    nvidia_api_key=api_key
+)
 llm_with_tools = llm.bind_tools([tools.search_tavily])
 
 
