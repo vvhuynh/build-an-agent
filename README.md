@@ -79,7 +79,8 @@ cd build-an-agent
 pip3 install -r requirements.txt
 
 # Set up environment variables
-# Copy variables.env.example to variables.env and add your NVIDIA_API_KEY
+cp variables.env.example variables.env
+# Edit variables.env and add your NVIDIA_API_KEY
 ```
 
 ### Running the Application
